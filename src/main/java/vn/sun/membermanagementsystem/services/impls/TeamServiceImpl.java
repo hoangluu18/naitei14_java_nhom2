@@ -8,15 +8,20 @@ import vn.sun.membermanagementsystem.dto.request.CreateTeamRequest;
 import vn.sun.membermanagementsystem.dto.request.UpdateTeamRequest;
 import vn.sun.membermanagementsystem.dto.response.TeamDTO;
 import vn.sun.membermanagementsystem.dto.response.TeamDetailDTO;
+import vn.sun.membermanagementsystem.dto.response.TeamDTO;
 import vn.sun.membermanagementsystem.entities.Team;
+import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
+import vn.sun.membermanagementsystem.mapper.TeamMapper; // Cần inject Mapper
 import vn.sun.membermanagementsystem.exception.DuplicateResourceException;
 import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
 import vn.sun.membermanagementsystem.mapper.TeamMapper;
 import vn.sun.membermanagementsystem.repositories.TeamRepository;
 import vn.sun.membermanagementsystem.services.TeamService;
 
+import java.util.Collections;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -27,6 +32,18 @@ public class TeamServiceImpl implements TeamService {
     private final TeamMapper teamMapper;
 
     @Override
+    public Optional<TeamDTO> getTeamById(Long id) {
+        return teamRepository.findById(id)
+                .map(teamMapper::toDTO);
+    }
+
+
+    @Override
+    public Team getRequiredTeam(Long id) {
+        return teamRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Team not found"));
+    }
+
     @Transactional
     public TeamDTO createTeam(CreateTeamRequest request) {
         log.info("Creating team with name: {}", request.getName());
@@ -48,7 +65,6 @@ public class TeamServiceImpl implements TeamService {
         return teamMapper.toDTO(savedTeam);
     }
 
-    @Override
     @Transactional
     public TeamDTO updateTeam(Long id, UpdateTeamRequest request) {
         log.info("Updating team with ID: {}", id);
@@ -78,8 +94,6 @@ public class TeamServiceImpl implements TeamService {
 
         return teamMapper.toDTO(updatedTeam);
     }
-
-    @Override
     @Transactional
     public boolean deleteTeam(Long id) {
         log.info("Soft deleting team with ID: {}", id);
@@ -113,12 +127,12 @@ public class TeamServiceImpl implements TeamService {
         log.info("Team detail retrieved successfully for ID: {}", id);
         return detailDTO;
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public List<TeamDTO> getAllTeams() {
         log.info("Getting all teams");
-        
+
         List<Team> teams = teamRepository.findAllNotDeleted();
         return teamMapper.toDTOList(teams);
     }

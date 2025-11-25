@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin-layout}">
+
+<head>
+  <title layout:title-pattern="Project Management - %s">Project Management</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+  <div class="content-header">
+    <h1>Project Management</h1>
+    <div class="header-actions">
+      <a th:href="@{/admin/projects/create}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Project
+      </a>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <form th:action="@{/admin/projects}" method="get" class="filter-form">
+      <div class="filter-row">
+        <div class="filter-item">
+          <input type="text"
+                 name="keyword"
+                 th:value="${keyword}"
+                 placeholder="Search by name or abbreviation..."
+                 class="form-control">
+        </div>
+
+        <div class="filter-item">
+          <select name="teamId" class="form-control" onchange="this.form.submit()">
+            <option value="" th:selected="${selectedTeamId == null}">All Teams</option>
+            <option th:each="team : ${teams}"
+                    th:value="${team.id}"
+                    th:selected="${selectedTeamId != null and selectedTeamId == team.id}"
+                    th:text="${team.name}">
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <select name="size" class="form-control" onchange="this.form.submit()">
+            <option th:each="pageSizeOption : ${pageSizeOptions}"
+                    th:value="${pageSizeOption}"
+                    th:selected="${currentPageSize == pageSizeOption}"
+                    th:text="${pageSizeOption} + ' per page'">
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <a th:href="@{/admin/projects}" class="btn btn-outline">
+            <i class="fas fa-redo"></i> Reset
+          </a>
+        </div>
+      </div>
+      <input type="hidden" name="teamId" th:value="${selectedTeamId}" />
+      <input type="hidden" name="sortBy" th:value="${sortBy}">
+      <input type="hidden" name="sortDir" th:value="${sortDir}">
+    </form>
+  </div>
+
+  <div class="results-info">
+    <p>Showing <strong th:text="${projects.content.size()}">0</strong> of <strong th:text="${projects.totalElements}">0</strong> projects</p>
+  </div>
+
+  <div class="table-container">
+    <table class="user-table">
+      <thead>
+      <tr>
+        <th>
+          <a th:href="@{/admin/projects(page=${projects.number}, size=${projects.size}, sortBy='id', sortDir=${sortBy == 'id' ? reverseSortDir : 'asc'}, keyword=${keyword}, teamId=${selectedTeamId})}">
+            #
+            <i class="fas" th:classappend="${sortBy == 'id' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+          </a>
+        </th>
+        <th>
+          <a th:href="@{/admin/projects(page=${projects.number}, size=${projects.size}, sortBy='name', sortDir=${sortBy == 'name' ? reverseSortDir : 'asc'}, keyword=${keyword}, teamId=${selectedTeamId})}">
+            Name
+            <i class="fas" th:classappend="${sortBy == 'name' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+          </a>
+        </th>
+        <th>Abbreviation</th>
+        <th>Team</th>
+        <th>
+          <a th:href="@{/admin/projects(page=${projects.number}, size=${projects.size}, sortBy='status', sortDir=${sortBy == 'status' ? reverseSortDir : 'asc'}, keyword=${keyword}, teamId=${selectedTeamId})}">
+            Status
+            <i class="fas" th:classappend="${sortBy == 'status' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+          </a>
+        </th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:if="${projects.isEmpty()}">
+        <td colspan="8" class="text-center">No projects found</td>
+      </tr>
+      <tr th:each="project, stat : ${projects.content}">
+        <td th:text="${projects.number * projects.size + stat.index + 1}"></td>
+        <td th:text="${project.name}"></td>
+        <td th:text="${project.abbreviation}"></td>
+        <td th:text="${project.teamName}"></td>
+        <td>
+                    <span th:class="|badge ${
+                        project.status == 'ONGOING' ? 'badge-success' :
+                        (project.status == 'PLANNING' ? 'badge-info' :
+                        (project.status == 'COMPLETED' ? 'badge-secondary' :
+                        'badge-warning'))
+                    }|"
+                          th:text="${project.status}">ONGOING
+                    </span>
+        </td>
+        <td th:text="${project.startDate}"></td>
+        <td th:text="${project.endDate}"></td>
+        <td class="action-buttons">
+          <a th:href="@{/admin/projects/{id}(id=${project.id})}" class="btn-icon btn-view" title="View">
+            <i class="fas fa-eye"></i>
+          </a>
+          <a th:href="@{/admin/projects/{id}/edit(id=${project.id})}" class="btn-icon btn-edit" title="Edit">
+            <i class="fas fa-edit"></i>
+          </a>
+          <button type="button"
+                  class="btn-icon btn-delete"
+                  title="Delete"
+                  th:data-project-id="${project.id}"
+                  th:data-project-name="${project.name}"
+                  onclick="confirmDeleteProject(this.dataset.projectId, this.dataset.projectName)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-container" th:if="${projects.totalPages > 1}">
+    <div class="pagination">
+      <a th:href="@{/admin/projects(page=0, size=${projects.size}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, teamId=${selectedTeamId})}"
+         class="page-link"
+         th:classappend="${projects.number == 0 ? 'disabled' : ''}"
+         th:aria-disabled="${projects.number == 0}">
+        <i class="fas fa-angle-double-left"></i>
+      </a>
+
+      <a th:href="@{/admin/projects(page=${projects.number - 1}, size=${projects.size}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, teamId=${selectedTeamId})}"
+         class="page-link"
+         th:classappend="${projects.number == 0 ? 'disabled' : ''}"
+         th:aria-disabled="${projects.number == 0}">
+        <i class="fas fa-angle-left"></i>
+      </a>
+
+      <th:block th:with="totalPages=${projects.totalPages}, currentPage=${projects.number}">
+        <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+          <a th:if="${pageNum < 2 || pageNum >= totalPages - 2 || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)}"
+             th:href="@{/admin/projects(page=${pageNum}, size=${projects.size}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, teamId=${selectedTeamId})}"
+             class="page-link"
+             th:classappend="${pageNum == currentPage ? 'active' : ''}"
+             th:text="${pageNum + 1}">1</a>
+
+          <span th:if="${pageNum == 2 and currentPage > 3}" class="page-ellipsis">...</span>
+          <span th:if="${pageNum == totalPages - 3 and currentPage < totalPages - 4}" class="page-ellipsis">...</span>
+        </th:block>
+      </th:block>
+
+      <a th:href="@{/admin/projects(page=${projects.number + 1}, size=${projects.size}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, teamId=${selectedTeamId})}"
+         class="page-link"
+         th:classappend="${projects.number >= projects.totalPages - 1 ? 'disabled' : ''}"
+         th:aria-disabled="${projects.number >= projects.totalPages - 1}">
+        <i class="fas fa-angle-right"></i>
+      </a>
+
+      <a th:href="@{/admin/projects(page=${projects.totalPages - 1}, size=${projects.size}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword}, teamId=${selectedTeamId})}"
+         class="page-link"
+         th:classappend="${projects.number >= projects.totalPages - 1 ? 'disabled' : ''}"
+         th:aria-disabled="${projects.number >= projects.totalPages - 1}">
+        <i class="fas fa-angle-double-right"></i>
+      </a>
+    </div>
+
+    <div class="pagination-info">
+      Page <strong th:text="${projects.number + 1}">1</strong> of <strong th:text="${projects.totalPages}">10</strong>
+    </div>
+  </div>
+</section>
+
+<th:block layout:fragment="scripts">
+  <script th:inline="javascript">
+    function confirmDeleteProject(projectId, projectName) {
+      if (confirm('Are you sure you want to delete project "' + projectName + '"?')) {
+        fetch('/admin/projects/' + projectId, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+                .then(response => {
+                  if (response.ok) {
+                    alert('Project deleted successfully');
+                    window.location.reload();
+                  } else {
+                    response.json().then(error => {
+                      alert('Failed to delete project: ' + (error.message || 'Server Error'));
+                    }).catch(() => {
+                      alert('Failed to delete project');
+                    });
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  alert('An error occurred while deleting the project');
+                });
+      }
+    }
+  </script>
+</th:block>
+
+</body>
+
+</html>

@@ -204,6 +204,11 @@ table td {
     border-bottom: 1px solid #e9ecef;
 }
 
+.filter-box {
+    margin-bottom: 12px;
+}
+
+
 /* User List Specific Styles */
 .content-header {
     display: flex;
@@ -539,11 +544,11 @@ table td {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .filter-item {
         min-width: 100%;
     }
-    
+
     .filter-actions {
         width: 100%;
         justify-content: flex-start;
@@ -556,19 +561,19 @@ table td {
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .table-container {
         overflow-x: auto;
     }
-    
+
     .user-table {
         min-width: 800px;
     }
-    
+
     .pagination-container {
         flex-direction: column;
     }
-    
+
     .pagination {
         flex-wrap: wrap;
         justify-content: center;
