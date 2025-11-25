@@ -11,13 +11,9 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeamDTO {
-
-    private Long id;
+public class TeamLeaderDTO {
+    private Long userId;
     private String name;
-    private String description;
-    private TeamLeaderDTO currentLeader;
-    private Integer memberCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String email;
+    private LocalDateTime startedAt;
 }
