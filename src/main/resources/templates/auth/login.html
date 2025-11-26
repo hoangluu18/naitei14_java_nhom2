@@ -1,10 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Member Management System</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
-<body>
 
+<body>
+    <div class="login-wrapper">
+        <div class="login-header">
+            <div class="login-icon">👤</div>
+            <h1>Admin Login</h1>
+            <p>Member Management System</p>
+        </div>
+        
+        <div class="login-container">
+            <div th:if="${error}" class="alert alert-error">
+                <span th:text="${error}">Invalid email or password</span>
+            </div>
+            
+            <div th:if="${message}" class="alert alert-success">
+                <span th:text="${message}">Logout successful</span>
+            </div>
+
+            <form th:action="@{/admin/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Email Address</label>
+                    <div class="input-icon email">
+                        <input type="email" 
+                               id="username" 
+                               name="username" 
+                               placeholder="Enter your email"
+                               required 
+                               autofocus>
+                    </div>
+                </div>
+            
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon password">
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Enter your password"
+                               required>
+                    </div>
+                </div>
+                
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+        
+        <div class="login-footer">
+            <p>© 2025 Member Management System. All rights reserved.</p>
+        </div>
+    </div>
 </body>
 </html>
+
