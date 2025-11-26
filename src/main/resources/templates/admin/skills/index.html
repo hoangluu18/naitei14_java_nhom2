@@ -155,17 +155,28 @@
         document.addEventListener('DOMContentLoaded', function() {
             const deleteButtons = document.querySelectorAll('.delete-btn');
             
+            // Get CSRF token
+            const csrfToken = /*[[${_csrf.token}]]*/ '';
+            const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+            
             deleteButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const skillId = this.getAttribute('data-id');
                     const skillName = this.getAttribute('data-name');
                     
                     if (confirm(`Are you sure you want to delete skill "${skillName}"?`)) {
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        
+                        // Add CSRF token to headers
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+                        
                         fetch(`/admin/skills/${skillId}`, {
                             method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            }
+                            headers: headers
                         })
                         .then(response => response.text())
                         .then(data => {
