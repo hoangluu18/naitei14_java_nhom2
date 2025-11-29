@@ -1,6 +1,7 @@
 package vn.sun.membermanagementsystem.services.impls;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,10 @@ import vn.sun.membermanagementsystem.services.SkillService;
 
 import java.time.LocalDateTime;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SkillServiceImpl implements SkillService {
@@ -30,6 +35,16 @@ public class SkillServiceImpl implements SkillService {
         Page<Skill> skillPage = skillRepository.findAllActive(pageable);
         return skillPage.map(skillMapper::toDTO);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SkillDTO> getAllSkills() {
+        log.info("Getting all skills");
+        List<Skill> skills = skillRepository.findAllNotDeleted();
+        return skills.stream()
+                .map(skillMapper::toDTO)
+                .collect(Collectors.toList());
+    }
     
     @Override
     @Transactional(readOnly = true)
@@ -38,7 +53,7 @@ public class SkillServiceImpl implements SkillService {
                 .orElseThrow(() -> new ResourceNotFoundException("Skill not found with id: " + id));
         return skillMapper.toDTO(skill);
     }
-    
+
     @Override
     @Transactional
     public SkillDTO createSkill(CreateSkillRequest request) {
@@ -77,4 +92,5 @@ public class SkillServiceImpl implements SkillService {
         skill.setDeletedAt(LocalDateTime.now());
         skillRepository.save(skill);
     }
+        
 }

@@ -52,5 +52,14 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<TeamMember> teamMemberships;
+    
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<ProjectMember> projectMemberships;
+    
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<UserPositionHistory> positionHistories;
+    
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<UserSkill> userSkills;
 
 }

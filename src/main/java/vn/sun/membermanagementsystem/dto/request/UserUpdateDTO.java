@@ -10,6 +10,7 @@ import vn.sun.membermanagementsystem.entities.User;
 import vn.sun.membermanagementsystem.enums.UserRole;
 import vn.sun.membermanagementsystem.enums.UserStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserUpdateDTO {
-    @NotNull(message = "User ID is required")
     private Long id;
 
     @Size(max = 255, message = "Name must be less than 255 characters")
@@ -27,10 +27,24 @@ public class UserUpdateDTO {
     @Size(max = 255, message = "Email must be less than 255 characters")
     private String email;
 
-    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
     private LocalDate birthday;
 
     private UserRole role;
+    
+    private UserStatus status;
+    
+    private Long positionId;
+    
+    private List<UserSkillDTO> skills;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserSkillDTO {
+        private Long skillId;
+        private String level; // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+        private BigDecimal usedYearNumber;
+    }
 }

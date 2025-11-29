@@ -3,74 +3,65 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/admin-layout}">
 <head>
-    <title>Edit Skill</title>
+    <title layout:title-pattern="Edit Skill - %s">Edit Skill</title>
 </head>
 <body>
-<div layout:fragment="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Edit Skill</h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Error Message -->
-                        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span th:text="${errorMessage}"></span>
-                        </div>
 
-                        <form th:action="@{/admin/skills/{id}(id=${skillId})}" 
-                              th:object="${skill}" 
-                              method="post">
-                            
-                            <!-- Name Field -->
-                            <div class="mb-3">
-                                <label for="name" class="form-label">
-                                    Skill Name <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="name" 
-                                       th:field="*{name}"
-                                       th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
-                                       placeholder="Enter skill name" 
-                                       required>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}">
-                                    <span th:errors="*{name}"></span>
-                                </div>
-                            </div>
-
-                            <!-- Description Field -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" 
-                                          id="description" 
-                                          th:field="*{description}"
-                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
-                                          rows="4" 
-                                          placeholder="Enter skill description"></textarea>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}">
-                                    <span th:errors="*{description}"></span>
-                                </div>
-                            </div>
-
-                            <!-- Form Actions -->
-                            <div class="d-flex justify-content-between">
-                                <a th:href="@{/admin/skills}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i> Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Update Skill
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1>Edit Skill</h1>
+        <div class="header-actions">
+            <a th:href="@{/admin/skills}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
         </div>
     </div>
-</div>
+
+    <!-- Error Messages -->
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="form-container">
+        <form th:action="@{/admin/skills/{id}(id=${skillId})}" 
+              th:object="${skill}" 
+              method="post"
+              class="form-horizontal">
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
+                <label for="name" class="form-label required">Skill Name</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="name" 
+                       th:field="*{name}"
+                       placeholder="Enter skill name"
+                       required>
+                <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+            </div>
+
+            <div class="form-group" th:classappend="${#fields.hasErrors('description')} ? 'has-error'">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" 
+                          id="description" 
+                          th:field="*{description}"
+                          rows="4"
+                          placeholder="Enter skill description"></textarea>
+                <div class="error-message" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                <small class="form-text">Optional description of the skill</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Skill
+                </button>
+                <a th:href="@{/admin/skills}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
 </body>
 </html>

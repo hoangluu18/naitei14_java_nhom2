@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin-layout}">
+<head>
+    <title layout:title-pattern="User Details - %s">User Details</title>
+    <link rel="stylesheet" th:href="@{/css/user-form.css}">
+</head>
+<body>
+
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1>User Details</h1>
+        <div class="header-actions">
+            <a th:href="@{/admin/users}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="user-details">
+        <!-- Basic Information -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-user"></i> Basic Information
+            </div>
+            <div class="detail-card-body">
+                <div class="detail-row">
+                    <div class="detail-label">ID</div>
+                    <div class="detail-value" th:text="${user.id}"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Full Name</div>
+                    <div class="detail-value" th:text="${user.name}"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value" th:text="${user.email}"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Birthday</div>
+                    <div class="detail-value">
+                        <span th:if="${user.birthday}" th:text="${#temporals.format(user.birthday, 'dd/MM/yyyy')}"></span>
+                        <span th:unless="${user.birthday}" class="empty-state">Not set</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Role</div>
+                    <div class="detail-value">
+                        <span class="badge badge-primary" th:text="${user.role}"></span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">
+                        <span th:class="${user.status.name() == 'ACTIVE' ? 'badge badge-success' : 
+                                         (user.status.name() == 'INACTIVE' ? 'badge badge-warning' : 'badge badge-danger')}"
+                              th:text="${user.status}"></span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Created At</div>
+                    <div class="detail-value">
+                        <span th:if="${user.createdAt}" th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Updated At</div>
+                    <div class="detail-value">
+                        <span th:if="${user.updatedAt}" th:text="${#temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position Information -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-briefcase"></i> Position
+            </div>
+            <div class="detail-card-body">
+                <div class="detail-row">
+                    <div class="detail-label">Current Position</div>
+                    <div class="detail-value">
+                        <span th:if="${user.currentPosition}" 
+                              th:text="${user.currentPosition.name + ' (' + user.currentPosition.abbreviation + ')'}"></span>
+                        <span th:unless="${user.currentPosition}" class="empty-state">No position assigned</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Information -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-users"></i> Team
+            </div>
+            <div class="detail-card-body">
+                <div class="detail-row">
+                    <div class="detail-label">Active Team</div>
+                    <div class="detail-value">
+                        <span th:if="${user.activeTeam}" th:text="${user.activeTeam}"></span>
+                        <span th:unless="${user.activeTeam}" class="empty-state">No team assigned</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Information -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-project-diagram"></i> Active Projects
+            </div>
+            <div class="detail-card-body">
+                <div th:if="${user.activeProjects != null && !user.activeProjects.isEmpty()}" class="project-list">
+                    <span th:each="project : ${user.activeProjects}" class="project-badge">
+                        <span th:text="${project.name + ' (' + project.abbreviation + ')'}"></span>
+                    </span>
+                </div>
+                <div th:if="${user.activeProjects == null || user.activeProjects.isEmpty()}" class="empty-state">
+                    No active projects
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Information -->
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-cogs"></i> Skills
+            </div>
+            <div class="detail-card-body">
+                <div th:if="${user.skills != null && !user.skills.isEmpty()}" class="view-skill-list">
+                    <div th:each="skill : ${user.skills}" class="view-skill-item">
+                        <span class="view-skill-name" th:text="${skill.skill != null ? skill.skill.name : 'Unknown'}"></span>
+                        <span class="view-skill-level badge" 
+                              th:class="${skill.level == 'EXPERT' ? 'badge badge-success' : 
+                                         (skill.level == 'ADVANCED' ? 'badge badge-info' : 
+                                         (skill.level == 'INTERMEDIATE' ? 'badge badge-warning' : 'badge badge-secondary'))}"
+                              th:text="${skill.level}"></span>
+                        <span th:if="${skill.usedYearNumber}" class="view-skill-years">
+                            (<span th:text="${skill.usedYearNumber}"></span> years)
+                        </span>
+                    </div>
+                </div>
+                <div th:if="${user.skills == null || user.skills.isEmpty()}" class="empty-state">
+                    No skills added
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit User
+            </a>
+            <a th:href="@{/admin/users}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

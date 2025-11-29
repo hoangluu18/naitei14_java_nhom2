@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin-layout}">
+<head>
+    <title layout:title-pattern="Activity Logs - %s">Activity Logs</title>
+    <link rel="stylesheet" th:href="@{/css/activity-log.css}">
+</head>
+<body>
+
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1><i class="fas fa-history"></i> Activity Logs</h1>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form th:action="@{/admin/activity-logs}" method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <select name="entityType" class="form-control">
+                        <option value="">All Entity Types</option>
+                        <option th:each="e : ${entityTypes}" 
+                                th:value="${e}" 
+                                th:text="${e}"
+                                th:selected="${e == entityType}"></option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <input type="date" name="fromDate" th:value="${fromDate}" class="form-control" placeholder="From Date">
+                </div>
+                
+                <div class="filter-item">
+                    <input type="date" name="toDate" th:value="${toDate}" class="form-control" placeholder="To Date">
+                </div>
+                
+                <div class="filter-item">
+                    <select name="size" class="form-control">
+                        <option th:value="10" th:selected="${pageSize == 10}">10 per page</option>
+                        <option th:value="25" th:selected="${pageSize == 25}">25 per page</option>
+                        <option th:value="50" th:selected="${pageSize == 50}">50 per page</option>
+                        <option th:value="100" th:selected="${pageSize == 100}">100 per page</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a th:href="@{/admin/activity-logs}" class="btn btn-outline">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info">
+        <p>Showing <strong th:text="${logs.size()}">0</strong> of <strong th:text="${totalItems}">0</strong> logs</p>
+    </div>
+
+    <!-- Activity Logs Table -->
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">#</th>
+                    <th style="width: 150px;">Time</th>
+                    <th style="width: 120px;">Action</th>
+                    <th style="width: 100px;">Entity</th>
+                    <th>Description</th>
+                    <th style="width: 80px;">User ID</th>
+                    <th style="width: 120px;">IP Address</th>
+                    <th style="width: 80px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(logs)}">
+                    <td colspan="8" class="empty-message">
+                        <i class="fas fa-inbox"></i> No activity logs found
+                    </td>
+                </tr>
+                <tr th:each="log : ${logs}">
+                    <td th:text="${log.id}">1</td>
+                    <td>
+                        <span class="log-time" th:text="${log.createdAt != null ? #temporals.format(log.createdAt, 'dd/MM/yyyy HH:mm:ss') : 'N/A'}">
+                            01/01/2025 00:00:00
+                        </span>
+                    </td>
+                    <td>
+                        <span class="action-badge" 
+                              th:classappend="${log.action.contains('CREATE') ? 'badge-success' : 
+                                               (log.action.contains('UPDATE') ? 'badge-warning' : 
+                                               (log.action.contains('DELETE') ? 'badge-danger' : 
+                                               (log.action.contains('LOGIN') ? 'badge-info' : 'badge-secondary')))}"
+                              th:text="${log.action}">CREATE</span>
+                    </td>
+                    <td>
+                        <span class="entity-type" th:text="${log.entityType ?: '-'}">User</span>
+                    </td>
+                    <td class="description-cell">
+                        <span class="description-text" th:text="${log.description ?: '-'}">User created successfully</span>
+                    </td>
+                    <td>
+                        <span th:if="${log.userId}" th:text="${log.userId}">1</span>
+                        <span th:unless="${log.userId}" class="text-muted">-</span>
+                    </td>
+                    <td>
+                        <span class="ip-address" th:text="${log.ipAddress ?: '-'}">127.0.0.1</span>
+                    </td>
+                    <td class="action-buttons">
+                        <a th:href="@{/admin/activity-logs/{id}(id=${log.id})}" 
+                           class="btn-icon btn-view" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" th:if="${totalPages > 1}">
+        <div class="pagination">
+            <!-- First Page -->
+            <a th:href="@{/admin/activity-logs(page=0, size=${pageSize}, entityType=${entityType}, fromDate=${fromDate}, toDate=${toDate})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            
+            <!-- Previous Page -->
+            <a th:href="@{/admin/activity-logs(page=${currentPage - 1}, size=${pageSize}, entityType=${entityType}, fromDate=${fromDate}, toDate=${toDate})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            
+            <!-- Page Numbers -->
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:if="${pageNum < 2 || pageNum >= totalPages - 2 || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)}"
+                   th:href="@{/admin/activity-logs(page=${pageNum}, size=${pageSize}, entityType=${entityType}, fromDate=${fromDate}, toDate=${toDate})}"
+                   class="page-link"
+                   th:classappend="${pageNum == currentPage ? 'active' : ''}"
+                   th:text="${pageNum + 1}">1</a>
+                
+                <!-- Show ellipsis -->
+                <span th:if="${pageNum == 2 && currentPage > 3}" class="page-ellipsis">...</span>
+                <span th:if="${pageNum == totalPages - 3 && currentPage < totalPages - 4}" class="page-ellipsis">...</span>
+            </th:block>
+            
+            <!-- Next Page -->
+            <a th:href="@{/admin/activity-logs(page=${currentPage + 1}, size=${pageSize}, entityType=${entityType}, fromDate=${fromDate}, toDate=${toDate})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            
+            <!-- Last Page -->
+            <a th:href="@{/admin/activity-logs(page=${totalPages - 1}, size=${pageSize}, entityType=${entityType}, fromDate=${fromDate}, toDate=${toDate})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </div>
+        
+        <div class="pagination-info">
+            Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">10</strong>
+            (<span th:text="${totalItems}">0</span> total)
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

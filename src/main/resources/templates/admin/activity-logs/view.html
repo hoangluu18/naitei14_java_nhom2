@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin-layout}">
+<head>
+    <title layout:title-pattern="Activity Log Details - %s">Activity Log Details</title>
+    <link rel="stylesheet" th:href="@{/css/activity-log.css}">
+</head>
+<body>
+
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1><i class="fas fa-file-alt"></i> Activity Log Details</h1>
+        <div class="header-actions">
+            <a th:href="@{/admin/activity-logs}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="log-details">
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-info-circle"></i> Log Information
+            </div>
+            <div class="detail-card-body">
+                <div class="detail-row">
+                    <div class="detail-label">Log ID</div>
+                    <div class="detail-value" th:text="${log.id}">1</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Timestamp</div>
+                    <div class="detail-value">
+                        <span th:if="${log.createdAt}" 
+                              th:text="${#temporals.format(log.createdAt, 'dd/MM/yyyy HH:mm:ss')}">01/01/2025 00:00:00</span>
+                        <span th:unless="${log.createdAt}" class="text-muted">N/A</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Action</div>
+                    <div class="detail-value">
+                        <span class="action-badge" 
+                              th:classappend="${log.action.contains('CREATE') ? 'badge-success' : 
+                                               (log.action.contains('UPDATE') ? 'badge-warning' : 
+                                               (log.action.contains('DELETE') ? 'badge-danger' : 
+                                               (log.action.contains('LOGIN') ? 'badge-info' : 'badge-secondary')))}"
+                              th:text="${log.action}">CREATE</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Entity Type</div>
+                    <div class="detail-value">
+                        <span th:if="${log.entityType}" th:text="${log.entityType}">User</span>
+                        <span th:unless="${log.entityType}" class="text-muted">N/A</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Entity ID</div>
+                    <div class="detail-value">
+                        <span th:if="${log.entityId}" th:text="${log.entityId}">1</span>
+                        <span th:unless="${log.entityId}" class="text-muted">N/A</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">User ID</div>
+                    <div class="detail-value">
+                        <span th:if="${log.userId}">
+                            <a th:href="@{/admin/users/{id}(id=${log.userId})}" th:text="${log.userId}">1</a>
+                        </span>
+                        <span th:unless="${log.userId}" class="text-muted">Anonymous</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-align-left"></i> Description
+            </div>
+            <div class="detail-card-body">
+                <div class="description-content">
+                    <pre th:if="${log.description}" th:text="${log.description}">User created successfully</pre>
+                    <span th:unless="${log.description}" class="text-muted">No description available</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <i class="fas fa-network-wired"></i> Request Information
+            </div>
+            <div class="detail-card-body">
+                <div class="detail-row">
+                    <div class="detail-label">IP Address</div>
+                    <div class="detail-value">
+                        <span th:if="${log.ipAddress}" th:text="${log.ipAddress}">127.0.0.1</span>
+                        <span th:unless="${log.ipAddress}" class="text-muted">N/A</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">User Agent</div>
+                    <div class="detail-value user-agent">
+                        <span th:if="${log.userAgent}" th:text="${log.userAgent}">Mozilla/5.0...</span>
+                        <span th:unless="${log.userAgent}" class="text-muted">N/A</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

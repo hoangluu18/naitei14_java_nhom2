@@ -3,197 +3,558 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/admin-layout}">
 <head>
-    <title>Skills Management</title>
+    <title layout:title-pattern="Skill Management - %s">Skill Management</title>
 </head>
 <body>
-<div layout:fragment="content">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Skills Management</h2>
+
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1>Skill Management</h1>
+        <div class="header-actions">
+            <button type="button" class="btn btn-success" onclick="openImportModal()">
+                <i class="fas fa-file-csv"></i> Import CSV
+            </button>
             <a th:href="@{/admin/skills/create}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add New Skill
             </a>
         </div>
+    </div>
 
-        <!-- Flash Messages -->
-        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <span th:utext="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:utext="${errorMessage}"></span>
+    </div>
 
-        <!-- Skills Table -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>
-                                <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='id', sortDir=${sortBy == 'id' && sortDir == 'asc' ? 'desc' : 'asc'})}">
-                                    ID
-                                    <i th:if="${sortBy == 'id'}" 
-                                       th:class="${sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'}"></i>
-                                </a>
-                            </th>
-                            <th>
-                                <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='name', sortDir=${sortBy == 'name' && sortDir == 'asc' ? 'desc' : 'asc'})}">
-                                    Name
-                                    <i th:if="${sortBy == 'name'}" 
-                                       th:class="${sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'}"></i>
-                                </a>
-                            </th>
-                            <th>Description</th>
-                            <th>
-                                <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='createdAt', sortDir=${sortBy == 'createdAt' && sortDir == 'asc' ? 'desc' : 'asc'})}">
-                                    Created At
-                                    <i th:if="${sortBy == 'createdAt'}" 
-                                       th:class="${sortDir == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'}"></i>
-                                </a>
-                            </th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="skill : ${skills.content}">
-                            <td th:text="${skill.id}">1</td>
-                            <td>
-                                <a th:href="@{/admin/skills/{id}(id=${skill.id})}" 
-                                   th:text="${skill.name}" 
-                                   class="text-decoration-none">Java</a>
-                            </td>
-                            <td th:text="${#strings.abbreviate(skill.description, 100)}">Programming language</td>
-                            <td th:text="${#temporals.format(skill.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 10:00</td>
-                            <td>
-                                <a th:href="@{/admin/skills/{id}(id=${skill.id})}" 
-                                   class="btn btn-sm btn-info" 
-                                   title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a th:href="@{/admin/skills/{id}/edit(id=${skill.id})}" 
-                                   class="btn btn-sm btn-warning" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" 
-                                        class="btn btn-sm btn-danger delete-btn" 
-                                        th:data-id="${skill.id}"
-                                        th:data-name="${skill.name}"
-                                        title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(skills.content)}">
-                            <td colspan="5" class="text-center">No skills found</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination-container" th:if="${totalPages > 1}">
-                    <div class="pagination">
-                        <!-- First Page -->
-                        <a th:href="@{/admin/skills(page=0, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
-                           class="page-link"
-                           th:classappend="${currentPage == 0 ? 'disabled' : ''}"
-                           th:aria-disabled="${currentPage == 0}">
-                            <i class="fas fa-angle-double-left"></i>
-                        </a>
-                        
-                        <!-- Previous Page -->
-                        <a th:href="@{/admin/skills(page=${currentPage - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
-                           class="page-link"
-                           th:classappend="${currentPage == 0 ? 'disabled' : ''}"
-                           th:aria-disabled="${currentPage == 0}">
-                            <i class="fas fa-angle-left"></i>
-                        </a>
-                        
-                        <!-- Page Numbers -->
-                        <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
-                            <a th:if="${pageNum < 2 || pageNum >= totalPages - 2 || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)}"
-                               th:href="@{/admin/skills(page=${pageNum}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
-                               class="page-link"
-                               th:classappend="${pageNum == currentPage ? 'active' : ''}"
-                               th:text="${pageNum + 1}">1</a>
-                            
-                            <span th:if="${pageNum == 2 && currentPage > 3}" class="page-ellipsis">...</span>
-                            <span th:if="${pageNum == totalPages - 3 && currentPage < totalPages - 4}" class="page-ellipsis">...</span>
-                        </th:block>
-                        
-                        <!-- Next Page -->
-                        <a th:href="@{/admin/skills(page=${currentPage + 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
-                           class="page-link"
-                           th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
-                           th:aria-disabled="${currentPage >= totalPages - 1}">
-                            <i class="fas fa-angle-right"></i>
-                        </a>
-                        
-                        <!-- Last Page -->
-                        <a th:href="@{/admin/skills(page=${totalPages - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
-                           class="page-link"
-                           th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
-                           th:aria-disabled="${currentPage >= totalPages - 1}">
-                            <i class="fas fa-angle-double-right"></i>
-                        </a>
-                    </div>
-                    
-                    <div class="pagination-info">
-                        Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">10</strong>
-                    </div>
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form th:action="@{/admin/skills}" method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <select name="size" class="form-control" onchange="this.form.submit()">
+                        <option th:value="10" th:selected="${currentPageSize == 10}">10 per page</option>
+                        <option th:value="25" th:selected="${currentPageSize == 25}">25 per page</option>
+                        <option th:value="50" th:selected="${currentPageSize == 50}">50 per page</option>
+                        <option th:value="100" th:selected="${currentPageSize == 100}">100 per page</option>
+                    </select>
                 </div>
             </div>
+            <input type="hidden" name="sortBy" th:value="${sortBy}">
+            <input type="hidden" name="sortDir" th:value="${sortDir}">
+        </form>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info">
+        <p>Showing <strong th:text="${skills.content.size()}">0</strong> of <strong th:text="${skills.totalElements}">0</strong> skills</p>
+    </div>
+
+    <!-- Skills Table -->
+    <div class="table-container">
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>
+                        <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='id', sortDir=${sortBy == 'id' ? (sortDir == 'asc' ? 'desc' : 'asc') : 'asc'})}">
+                            #
+                            <i class="fas" th:classappend="${sortBy == 'id' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='name', sortDir=${sortBy == 'name' ? (sortDir == 'asc' ? 'desc' : 'asc') : 'asc'})}">
+                            Name
+                            <i class="fas" th:classappend="${sortBy == 'name' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                        </a>
+                    </th>
+                    <th>Description</th>
+                    <th>
+                        <a th:href="@{/admin/skills(page=${currentPage}, size=${currentPageSize}, sortBy='createdAt', sortDir=${sortBy == 'createdAt' ? (sortDir == 'asc' ? 'desc' : 'asc') : 'desc'})}">
+                            Created At
+                            <i class="fas" th:classappend="${sortBy == 'createdAt' ? (sortDir == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}"></i>
+                        </a>
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${skills.isEmpty()}">
+                    <td colspan="5" class="text-center">No skills found</td>
+                </tr>
+                <tr th:each="skill, stat : ${skills.content}">
+                    <td th:text="${skills.number * skills.size + stat.index + 1}"></td>
+                    <td th:text="${skill.name}"></td>
+                    <td th:text="${#strings.abbreviate(skill.description, 100)}">Programming language</td>
+                    <td th:text="${skill.createdAt != null ? #temporals.format(skill.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}"></td>
+                    <td class="action-buttons">
+                        <a th:href="@{/admin/skills/{id}(id=${skill.id})}" 
+                           class="btn-icon btn-view" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a th:href="@{/admin/skills/{id}/edit(id=${skill.id})}" 
+                           class="btn-icon btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" 
+                                class="btn-icon btn-delete" 
+                                title="Delete"
+                                th:data-skill-id="${skill.id}"
+                                th:data-skill-name="${skill.name}"
+                                onclick="confirmDeleteSkill(this.dataset.skillId, this.dataset.skillName)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" th:if="${totalPages > 1}">
+        <div class="pagination">
+            <!-- First Page -->
+            <a th:href="@{/admin/skills(page=0, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            
+            <!-- Previous Page -->
+            <a th:href="@{/admin/skills(page=${currentPage - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            
+            <!-- Page Numbers -->
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:if="${pageNum < 2 || pageNum >= totalPages - 2 || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)}"
+                   th:href="@{/admin/skills(page=${pageNum}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+                   class="page-link"
+                   th:classappend="${pageNum == currentPage ? 'active' : ''}"
+                   th:text="${pageNum + 1}">1</a>
+                
+                <span th:if="${pageNum == 2 && currentPage > 3}" class="page-ellipsis">...</span>
+                <span th:if="${pageNum == totalPages - 3 && currentPage < totalPages - 4}" class="page-ellipsis">...</span>
+            </th:block>
+            
+            <!-- Next Page -->
+            <a th:href="@{/admin/skills(page=${currentPage + 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            
+            <!-- Last Page -->
+            <a th:href="@{/admin/skills(page=${totalPages - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </div>
+        
+        <div class="pagination-info">
+            Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">10</strong>
         </div>
     </div>
 
-    <!-- Delete Confirmation Script -->
+    <!-- Import CSV Modal -->
+    <div id="importModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-csv"></i> Import Skills from CSV</h2>
+                <button type="button" class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            
+            <!-- Step 1: File Upload -->
+            <div id="uploadStep" class="modal-body">
+                <div class="form-group">
+                    <label for="csvFile">Select CSV File:</label>
+                    <input type="file" id="csvFile" name="file" accept=".csv" class="form-control"/>
+                </div>
+                <div class="import-info">
+                    <h4>CSV Format Requirements:</h4>
+                    <ul>
+                        <li><strong>name</strong> (required): Skill name (max 255 characters)</li>
+                        <li><strong>description</strong> (optional): Skill description</li>
+                    </ul>
+                    <a th:href="@{/admin/import/skills/sample}" class="btn btn-link">
+                        <i class="fas fa-download"></i> Download Sample CSV
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Step 2: Preview -->
+            <div id="previewStep" class="modal-body" style="display: none;">
+                <div id="previewSummary" class="preview-summary"></div>
+                <div id="previewTableContainer" class="preview-table-container">
+                    <table id="previewTable" class="preview-table">
+                        <thead id="previewTableHead"></thead>
+                        <tbody id="previewTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Step 3: Result -->
+            <div id="resultStep" class="modal-body" style="display: none;">
+                <div id="importResult" class="import-result"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                <button type="button" id="previewBtn" class="btn btn-info" onclick="previewCsv()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+                <button type="button" id="backBtn" class="btn btn-secondary" style="display: none;" onclick="backToUpload()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="button" id="importBtn" class="btn btn-primary" style="display: none;" onclick="importCsv()">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+                <button type="button" id="closeResultBtn" class="btn btn-primary" style="display: none;" onclick="closeAndReload()">
+                    <i class="fas fa-check"></i> Done
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Pagination -->
+    <div class="pagination-container" th:if="${totalPages > 1}">
+        <div class="pagination">
+            <!-- First Page -->
+            <a th:href="@{/admin/skills(page=0, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            
+            <!-- Previous Page -->
+            <a th:href="@{/admin/skills(page=${currentPage - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage == 0 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage == 0}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            
+            <!-- Page Numbers -->
+            <th:block th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:if="${pageNum < 2 || pageNum >= totalPages - 2 || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)}"
+                   th:href="@{/admin/skills(page=${pageNum}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+                   class="page-link"
+                   th:classappend="${pageNum == currentPage ? 'active' : ''}"
+                   th:text="${pageNum + 1}">1</a>
+                
+                <span th:if="${pageNum == 2 && currentPage > 3}" class="page-ellipsis">...</span>
+                <span th:if="${pageNum == totalPages - 3 && currentPage < totalPages - 4}" class="page-ellipsis">...</span>
+            </th:block>
+            
+            <!-- Next Page -->
+            <a th:href="@{/admin/skills(page=${currentPage + 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            
+            <!-- Last Page -->
+            <a th:href="@{/admin/skills(page=${totalPages - 1}, size=${currentPageSize}, sortBy=${sortBy}, sortDir=${sortDir})}"
+               class="page-link"
+               th:classappend="${currentPage >= totalPages - 1 ? 'disabled' : ''}"
+               th:aria-disabled="${currentPage >= totalPages - 1}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </div>
+        
+        <div class="pagination-info">
+            Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">10</strong>
+        </div>
+    </div>
+</section>
+
+<th:block layout:fragment="scripts">
     <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            
-            // Get CSRF token
-            const csrfToken = /*[[${_csrf.token}]]*/ '';
-            const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
-            
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const skillId = this.getAttribute('data-id');
-                    const skillName = this.getAttribute('data-name');
-                    
-                    if (confirm(`Are you sure you want to delete skill "${skillName}"?`)) {
-                        const headers = {
-                            'Content-Type': 'application/json'
-                        };
-                        
-                        // Add CSRF token to headers
-                        if (csrfToken && csrfHeader) {
-                            headers[csrfHeader] = csrfToken;
-                        }
-                        
-                        fetch(`/admin/skills/${skillId}`, {
-                            method: 'DELETE',
-                            headers: headers
-                        })
-                        .then(response => response.text())
-                        .then(data => {
-                            if (data === 'success') {
-                                window.location.reload();
-                            } else {
-                                alert('Error deleting skill: ' + data);
-                            }
-                        })
-                        .catch(error => {
-                            alert('Error deleting skill: ' + error);
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        let currentFile = null;
+        let previewData = null;
+        
+        function confirmDeleteSkill(skillId, skillName) {
+            if (confirm('Are you sure you want to delete skill "' + skillName + '"?')) {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+                
+                fetch('/admin/skills/' + skillId, {
+                    method: 'DELETE',
+                    headers: headers
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Skill deleted successfully');
+                        window.location.reload();
+                    } else {
+                        response.json().then(error => {
+                            alert('Failed to delete skill: ' + (error.message || 'Server Error'));
+                        }).catch(() => {
+                            alert('Failed to delete skill');
                         });
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the skill');
                 });
+            }
+        }
+        
+        // Import Modal Functions
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+            resetModal();
+        }
+        
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            resetModal();
+        }
+        
+        function resetModal() {
+            document.getElementById('csvFile').value = '';
+            document.getElementById('uploadStep').style.display = 'block';
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('resultStep').style.display = 'none';
+            document.getElementById('previewBtn').style.display = 'inline-block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('closeResultBtn').style.display = 'none';
+            currentFile = null;
+            previewData = null;
+        }
+        
+        function previewCsv() {
+            const fileInput = document.getElementById('csvFile');
+            if (!fileInput.files.length) {
+                alert('Please select a CSV file first');
+                return;
+            }
+            
+            currentFile = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            document.getElementById('previewBtn').disabled = true;
+            document.getElementById('previewBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            fetch('/admin/import/skills/preview', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                previewData = data;
+                showPreview(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to preview CSV file: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('previewBtn').disabled = false;
+                document.getElementById('previewBtn').innerHTML = '<i class="fas fa-eye"></i> Preview';
             });
+        }
+        
+        function showPreview(data) {
+            // Hide upload, show preview
+            document.getElementById('uploadStep').style.display = 'none';
+            document.getElementById('previewStep').style.display = 'block';
+            document.getElementById('previewBtn').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'inline-block';
+            document.getElementById('importBtn').style.display = 'inline-block';
+            
+            // Check file error
+            if (data.fileError) {
+                document.getElementById('previewSummary').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>File Error:</strong> ${data.fileError}
+                    </div>
+                `;
+                document.getElementById('previewTableContainer').style.display = 'none';
+                document.getElementById('importBtn').style.display = 'none';
+                return;
+            }
+            
+            // Show summary
+            const summaryClass = data.hasErrors ? 'alert-warning' : 'alert-success';
+            const summaryIcon = data.hasErrors ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            document.getElementById('previewSummary').innerHTML = `
+                <div class="alert ${summaryClass}">
+                    <i class="fas ${summaryIcon}"></i>
+                    <strong>Preview Summary:</strong> 
+                    Total: ${data.totalRows} rows | 
+                    <span class="text-success">Valid: ${data.validRows}</span> | 
+                    <span class="text-danger">Invalid: ${data.invalidRows}</span>
+                </div>
+            `;
+            
+            // Build table header
+            let headerHtml = '<tr><th>#</th>';
+            data.headers.forEach(header => {
+                headerHtml += `<th>${header}</th>`;
+            });
+            headerHtml += '<th>Status</th></tr>';
+            document.getElementById('previewTableHead').innerHTML = headerHtml;
+            
+            // Build table body
+            let bodyHtml = '';
+            data.rows.forEach(row => {
+                const rowClass = row.valid ? '' : 'row-invalid';
+                bodyHtml += `<tr class="${rowClass}">`;
+                bodyHtml += `<td>${row.rowNumber}</td>`;
+                row.data.forEach(cell => {
+                    bodyHtml += `<td>${cell || ''}</td>`;
+                });
+                
+                if (row.valid) {
+                    bodyHtml += '<td><span class="badge badge-success"><i class="fas fa-check"></i> Valid</span></td>';
+                } else {
+                    const errorList = row.errors.map(e => `<li>${e}</li>`).join('');
+                    bodyHtml += `<td>
+                        <span class="badge badge-danger"><i class="fas fa-times"></i> Invalid</span>
+                        <ul class="error-list">${errorList}</ul>
+                    </td>`;
+                }
+                bodyHtml += '</tr>';
+            });
+            document.getElementById('previewTableBody').innerHTML = bodyHtml;
+            document.getElementById('previewTableContainer').style.display = 'block';
+            
+            // Disable import if all rows invalid
+            if (data.validRows === 0) {
+                document.getElementById('importBtn').disabled = true;
+                document.getElementById('importBtn').title = 'No valid rows to import';
+            } else {
+                document.getElementById('importBtn').disabled = false;
+                document.getElementById('importBtn').title = '';
+            }
+        }
+        
+        function backToUpload() {
+            document.getElementById('uploadStep').style.display = 'block';
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('previewBtn').style.display = 'inline-block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+        }
+        
+        function importCsv() {
+            if (!currentFile) {
+                alert('No file selected');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            document.getElementById('importBtn').disabled = true;
+            document.getElementById('importBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            document.getElementById('backBtn').disabled = true;
+            
+            fetch('/admin/import/skills', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to import CSV file: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('importBtn').disabled = false;
+                document.getElementById('importBtn').innerHTML = '<i class="fas fa-upload"></i> Import';
+                document.getElementById('backBtn').disabled = false;
+            });
+        }
+        
+        function showResult(data) {
+            // Hide preview, show result
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('resultStep').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('closeResultBtn').style.display = 'inline-block';
+            
+            let resultHtml = '';
+            
+            if (data.successCount > 0) {
+                resultHtml += `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Successfully imported ${data.successCount} skill(s)!</strong>
+                    </div>
+                `;
+            }
+            
+            if (data.errors && data.errors.length > 0) {
+                resultHtml += `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>${data.errorCount} row(s) failed to import:</strong>
+                        <ul class="error-list-detail">
+                            ${data.errors.map(e => `<li>Row ${e.rowNumber}, ${e.fieldName}: ${e.errorMessage}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (data.successCount === 0 && (!data.errors || data.errors.length === 0)) {
+                resultHtml = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>No data was imported.</strong> Please check your CSV file.
+                    </div>
+                `;
+            }
+            
+            document.getElementById('importResult').innerHTML = resultHtml;
+        }
+        
+        function closeAndReload() {
+            closeImportModal();
+            window.location.reload();
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('importModal');
+            if (event.target === modal) {
+                closeImportModal();
+            }
+        }
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImportModal();
+            }
         });
     </script>
-</div>
+</th:block>
 </body>
 </html>

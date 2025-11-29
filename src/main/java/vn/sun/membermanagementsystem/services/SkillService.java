@@ -6,9 +6,13 @@ import vn.sun.membermanagementsystem.dto.request.CreateSkillRequest;
 import vn.sun.membermanagementsystem.dto.request.UpdateSkillRequest;
 import vn.sun.membermanagementsystem.dto.response.SkillDTO;
 
+import java.util.List;
+
 public interface SkillService {
     
     Page<SkillDTO> getAllSkills(Pageable pageable);
+
+    List<SkillDTO> getAllSkills();
     
     SkillDTO getSkillById(Long id);
     
@@ -18,3 +22,4 @@ public interface SkillService {
     
     void deleteSkill(Long id);
 }
+

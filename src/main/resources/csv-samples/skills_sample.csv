@@ -1,0 +1,11 @@
+name,description
+Java,"A high-level, class-based, object-oriented programming language"
+Spring Boot,"An open-source Java-based framework for creating microservices"
+React,"A JavaScript library for building user interfaces"
+Docker,"A platform for developing, shipping, and running applications in containers"
+MySQL,"An open-source relational database management system"
+Python,"A high-level, general-purpose programming language"
+AWS,"Amazon Web Services - Cloud computing platform"
+Git,"A distributed version control system"
+TypeScript,"A strongly typed programming language that builds on JavaScript"
+Kubernetes,"An open-source container orchestration system"

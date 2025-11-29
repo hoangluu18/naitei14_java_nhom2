@@ -31,4 +31,15 @@ public class Skill {
 
     @OneToMany(mappedBy = "skill", fetch = FetchType.LAZY)
     private List<UserSkill> userSkills;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

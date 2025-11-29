@@ -10,3 +10,11 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+
+default:
+  user:
+    password: 123456
+
+jwt:
+  secret: YourVerySecureSecretKeyForJWTTokenGenerationMustBeLongEnoughAtLeast256BitsForHS256Algorithm
+  expiration: 86400000

@@ -1,0 +1,6 @@
+name,abbreviation,start_date,end_date,status,team_name,member_emails
+E-Commerce Platform,ECP,2024-01-15,2024-12-31,ONGOING,Backend Team,"john.doe@example.com;jane.smith@example.com"
+Mobile Banking App,MBA,2024-03-01,,PLANNING,Mobile Team,"bob.wilson@example.com;charlie.davis@example.com"
+Internal Dashboard,ID,2023-06-01,2023-12-15,COMPLETED,Frontend Team,"alice.brown@example.com;john.doe@example.com"
+Data Analytics Platform,DAP,2024-02-01,2024-08-31,ONGOING,Data Team,"david.lee@example.com;emma.wilson@example.com"
+Cloud Migration,CM,2024-04-01,,PLANNING,DevOps Team,"alice.brown@example.com;charlie.davis@example.com"
