@@ -74,7 +74,7 @@ public class SecurityConfig {
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/admin/**")
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/api/**"))
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/api/**", "/admin/import/**"))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)

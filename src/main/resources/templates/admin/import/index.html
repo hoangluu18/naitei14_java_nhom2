@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/admin-layout}">
+<head>
+    <title layout:title-pattern="Import CSV - %s">Import CSV</title>
+</head>
+<body>
+
+<section layout:fragment="content">
+    <div class="content-header">
+        <h1><i class="fas fa-file-csv"></i> CSV Import Center</h1>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle"></i>
+        <span th:utext="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:utext="${errorMessage}"></span>
+    </div>
+    <div th:if="${warningMessage}" class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span th:text="${warningMessage}"></span>
+    </div>
+
+    <div class="import-grid">
+        <!-- Skill Import -->
+        <div class="import-card">
+            <div class="import-card-header">
+                <i class="fas fa-code"></i>
+                <h3>Skills</h3>
+            </div>
+            <div class="import-card-body">
+                <p>Import skills with name and description.</p>
+                <ul class="import-fields">
+                    <li><strong>name</strong> - Required</li>
+                    <li><strong>description</strong> - Optional</li>
+                </ul>
+            </div>
+            <div class="import-card-footer">
+                <a th:href="@{/admin/import/skills/sample}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-download"></i> Sample CSV
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openImportModal('skills', 'Skills')">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+            </div>
+        </div>
+
+        <!-- Position Import -->
+        <div class="import-card">
+            <div class="import-card-header">
+                <i class="fas fa-briefcase"></i>
+                <h3>Positions</h3>
+            </div>
+            <div class="import-card-body">
+                <p>Import positions with name and abbreviation.</p>
+                <ul class="import-fields">
+                    <li><strong>name</strong> - Required</li>
+                    <li><strong>abbreviation</strong> - Required</li>
+                </ul>
+            </div>
+            <div class="import-card-footer">
+                <a th:href="@{/admin/import/positions/sample}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-download"></i> Sample CSV
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openImportModal('positions', 'Positions')">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+            </div>
+        </div>
+
+        <!-- Team Import -->
+        <div class="import-card">
+            <div class="import-card-header">
+                <i class="fas fa-users"></i>
+                <h3>Teams</h3>
+            </div>
+            <div class="import-card-body">
+                <p>Import teams with name and description.</p>
+                <ul class="import-fields">
+                    <li><strong>name</strong> - Required</li>
+                    <li><strong>description</strong> - Optional</li>
+                </ul>
+            </div>
+            <div class="import-card-footer">
+                <a th:href="@{/admin/import/teams/sample}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-download"></i> Sample CSV
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openImportModal('teams', 'Teams')">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+            </div>
+        </div>
+
+        <!-- User Import -->
+        <div class="import-card">
+            <div class="import-card-header">
+                <i class="fas fa-user"></i>
+                <h3>Users</h3>
+            </div>
+            <div class="import-card-body">
+                <p>Import users with skills.</p>
+                <ul class="import-fields">
+                    <li><strong>name, email, password</strong> - Required</li>
+                    <li><strong>birthday, role, status</strong> - Required</li>
+                    <li><strong>skills</strong> - Optional (skill:level:years)</li>
+                </ul>
+                <p class="note">Note: Skills must exist first.</p>
+            </div>
+            <div class="import-card-footer">
+                <a th:href="@{/admin/import/users/sample}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-download"></i> Sample CSV
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openImportModal('users', 'Users')">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+            </div>
+        </div>
+
+        <!-- Project Import -->
+        <div class="import-card">
+            <div class="import-card-header">
+                <i class="fas fa-project-diagram"></i>
+                <h3>Projects</h3>
+            </div>
+            <div class="import-card-body">
+                <p>Import projects with members.</p>
+                <ul class="import-fields">
+                    <li><strong>name, status, team_name</strong> - Required</li>
+                    <li><strong>abbreviation, dates</strong> - Optional</li>
+                    <li><strong>member_emails</strong> - Optional (;-separated)</li>
+                </ul>
+                <p class="note">Note: Teams & Users must exist first.</p>
+            </div>
+            <div class="import-card-footer">
+                <a th:href="@{/admin/import/projects/sample}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-download"></i> Sample CSV
+                </a>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openImportModal('projects', 'Projects')">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Order Info -->
+    <div class="import-order-info">
+        <h3><i class="fas fa-info-circle"></i> Recommended Import Order</h3>
+        <div class="import-steps">
+            <div class="step"><span class="step-number">1</span> Skills</div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step"><span class="step-number">2</span> Positions</div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step"><span class="step-number">3</span> Teams</div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step"><span class="step-number">4</span> Users</div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step"><span class="step-number">5</span> Projects</div>
+        </div>
+    </div>
+
+    <!-- Dynamic Import Modal -->
+    <div id="importModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-csv"></i> Import <span id="modalEntityName">Data</span> from CSV</h2>
+                <button type="button" class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            <form id="importForm" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="csvFile">Select CSV File:</label>
+                        <input type="file" id="csvFile" name="file" accept=".csv" required class="form-control"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<th:block layout:fragment="scripts">
+    <script>
+        function openImportModal(entityType, entityName) {
+            document.getElementById('modalEntityName').textContent = entityName;
+            document.getElementById('importForm').action = '/admin/import/' + entityType;
+            document.getElementById('importModal').style.display = 'flex';
+        }
+        
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            document.getElementById('csvFile').value = '';
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('importModal');
+            if (event.target === modal) {
+                closeImportModal();
+            }
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImportModal();
+            }
+        });
+    </script>
+</th:block>
+
+<style>
+    .import-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .import-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .import-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .import-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .import-card-header i {
+        font-size: 1.5rem;
+    }
+    
+    .import-card-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .import-card-body {
+        padding: 1.25rem;
+    }
+    
+    .import-card-body p {
+        margin: 0 0 0.75rem 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .import-fields {
+        margin: 0;
+        padding-left: 1.25rem;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+    
+    .import-fields li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .import-card-body .note {
+        margin-top: 0.5rem;
+        color: #dc3545;
+        font-style: italic;
+        font-size: 0.8rem;
+    }
+    
+    .import-card-footer {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .import-order-info {
+        margin-top: 2rem;
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .import-order-info h3 {
+        margin: 0 0 1rem 0;
+        color: #495057;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .import-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .step {
+        background: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        font-weight: 500;
+    }
+    
+    .step-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .step-arrow {
+        color: #667eea;
+        font-size: 1.25rem;
+    }
+    
+    @media (max-width: 768px) {
+        .import-steps {
+            flex-direction: column;
+        }
+        
+        .step-arrow {
+            transform: rotate(90deg);
+        }
+    }
+</style>
+
+</body>
+</html>

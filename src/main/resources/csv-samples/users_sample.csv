@@ -1,0 +1,8 @@
+name,email,password,birthday,role,status,skills
+John Doe,john.doe@example.com,password123,1990-05-15,MEMBER,ACTIVE,"Java:ADVANCED:3;Spring Boot:INTERMEDIATE:2"
+Jane Smith,jane.smith@example.com,password123,1985-08-22,ADMIN,ACTIVE,"React:EXPERT:5;Docker:ADVANCED:3"
+Bob Wilson,bob.wilson@example.com,password123,1992-12-10,MEMBER,ACTIVE,"MySQL:INTERMEDIATE:2;Python:BEGINNER:1"
+Alice Brown,alice.brown@example.com,password123,1988-03-25,MEMBER,ACTIVE,"AWS:ADVANCED:4;Kubernetes:INTERMEDIATE:2"
+Charlie Davis,charlie.davis@example.com,password123,1995-07-18,MEMBER,ACTIVE,"TypeScript:INTERMEDIATE:2;Git:EXPERT:5"
+Emma Wilson,emma.wilson@example.com,password123,1991-11-30,MEMBER,INACTIVE,""
+David Lee,david.lee@example.com,password123,1987-01-05,MEMBER,ACTIVE,"Java:EXPERT:7;Spring Boot:EXPERT:5;Docker:ADVANCED:3"

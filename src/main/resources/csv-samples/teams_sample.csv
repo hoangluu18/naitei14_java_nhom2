@@ -1,0 +1,8 @@
+name,description
+Backend Team,"Team responsible for server-side development and APIs"
+Frontend Team,"Team responsible for client-side development and UI"
+DevOps Team,"Team responsible for CI/CD pipelines and infrastructure"
+QA Team,"Team responsible for quality assurance and testing"
+Mobile Team,"Team responsible for mobile application development"
+Data Team,"Team responsible for data analytics and engineering"
+Security Team,"Team responsible for application and infrastructure security"

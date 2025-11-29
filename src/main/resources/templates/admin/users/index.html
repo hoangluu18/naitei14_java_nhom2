@@ -11,6 +11,9 @@
     <div class="content-header">
         <h1>User Management</h1>
         <div class="header-actions">
+            <button type="button" class="btn btn-success" onclick="openImportModal()">
+                <i class="fas fa-file-csv"></i> Import CSV
+            </button>
             <a th:href="@{/admin/users/create}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add New User
             </a>
@@ -240,7 +243,309 @@
             Page <strong th:text="${currentPage + 1}">1</strong> of <strong th:text="${totalPages}">10</strong>
         </div>
     </div>
+
+    <!-- Import CSV Modal -->
+    <div id="importModal" class="modal" style="display: none;">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-csv"></i> Import Users from CSV</h2>
+                <button type="button" class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            
+            <!-- Step 1: File Upload -->
+            <div id="uploadStep" class="modal-body">
+                <div class="form-group">
+                    <label for="csvFile">Select CSV File:</label>
+                    <input type="file" id="csvFile" name="file" accept=".csv" class="form-control"/>
+                </div>
+                <div class="import-info">
+                    <h4>CSV Format Requirements:</h4>
+                    <ul>
+                        <li><strong>name</strong> (required): User name</li>
+                        <li><strong>email</strong> (required): Email address</li>
+                        <li><strong>password</strong> (required): Password (min 6 chars)</li>
+                        <li><strong>birthday</strong> (optional): Format yyyy-MM-dd</li>
+                        <li><strong>role</strong> (required): ADMIN or MEMBER</li>
+                        <li><strong>status</strong> (required): ACTIVE or INACTIVE</li>
+                        <li><strong>skills</strong> (optional): Format: skill:level:years;skill:level:years</li>
+                    </ul>
+                    <p><strong>Note:</strong> Skills must exist before importing users with skills.</p>
+                    <a th:href="@{/admin/import/users/sample}" class="btn btn-link">
+                        <i class="fas fa-download"></i> Download Sample CSV
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Step 2: Preview -->
+            <div id="previewStep" class="modal-body" style="display: none;">
+                <div id="previewSummary" class="preview-summary"></div>
+                <div id="previewTableContainer" class="preview-table-container">
+                    <table id="previewTable" class="preview-table">
+                        <thead id="previewTableHead"></thead>
+                        <tbody id="previewTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Step 3: Result -->
+            <div id="resultStep" class="modal-body" style="display: none;">
+                <div id="importResult" class="import-result"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                <button type="button" id="previewBtn" class="btn btn-info" onclick="previewCsv()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+                <button type="button" id="backBtn" class="btn btn-secondary" style="display: none;" onclick="backToUpload()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button type="button" id="importBtn" class="btn btn-primary" style="display: none;" onclick="importCsv()">
+                    <i class="fas fa-upload"></i> Import
+                </button>
+                <button type="button" id="closeResultBtn" class="btn btn-primary" style="display: none;" onclick="closeAndReload()">
+                    <i class="fas fa-check"></i> Done
+                </button>
+            </div>
+        </div>
+    </div>
 </section>
+
+<th:block layout:fragment="scripts">
+    <script>
+        let currentFile = null;
+        let previewData = null;
+        
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+            resetModal();
+        }
+        
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            resetModal();
+        }
+        
+        function resetModal() {
+            document.getElementById('csvFile').value = '';
+            document.getElementById('uploadStep').style.display = 'block';
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('resultStep').style.display = 'none';
+            document.getElementById('previewBtn').style.display = 'inline-block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('closeResultBtn').style.display = 'none';
+            currentFile = null;
+            previewData = null;
+        }
+        
+        function previewCsv() {
+            const fileInput = document.getElementById('csvFile');
+            if (!fileInput.files.length) {
+                alert('Please select a CSV file first');
+                return;
+            }
+            
+            currentFile = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            document.getElementById('previewBtn').disabled = true;
+            document.getElementById('previewBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            fetch('/admin/import/users/preview', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                previewData = data;
+                showPreview(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to preview CSV file: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('previewBtn').disabled = false;
+                document.getElementById('previewBtn').innerHTML = '<i class="fas fa-eye"></i> Preview';
+            });
+        }
+        
+        function showPreview(data) {
+            document.getElementById('uploadStep').style.display = 'none';
+            document.getElementById('previewStep').style.display = 'block';
+            document.getElementById('previewBtn').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'inline-block';
+            document.getElementById('importBtn').style.display = 'inline-block';
+            
+            if (data.fileError) {
+                document.getElementById('previewSummary').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>File Error:</strong> ${data.fileError}
+                    </div>
+                `;
+                document.getElementById('previewTableContainer').style.display = 'none';
+                document.getElementById('importBtn').style.display = 'none';
+                return;
+            }
+            
+            const summaryClass = data.hasErrors ? 'alert-warning' : 'alert-success';
+            const summaryIcon = data.hasErrors ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            document.getElementById('previewSummary').innerHTML = `
+                <div class="alert ${summaryClass}">
+                    <i class="fas ${summaryIcon}"></i>
+                    <strong>Preview Summary:</strong> 
+                    Total: ${data.totalRows} rows | 
+                    <span class="text-success">Valid: ${data.validRows}</span> | 
+                    <span class="text-danger">Invalid: ${data.invalidRows}</span>
+                </div>
+            `;
+            
+            let headerHtml = '<tr><th>#</th>';
+            data.headers.forEach(header => {
+                headerHtml += `<th>${header}</th>`;
+            });
+            headerHtml += '<th>Status</th></tr>';
+            document.getElementById('previewTableHead').innerHTML = headerHtml;
+            
+            let bodyHtml = '';
+            data.rows.forEach(row => {
+                const rowClass = row.valid ? '' : 'row-invalid';
+                bodyHtml += `<tr class="${rowClass}">`;
+                bodyHtml += `<td>${row.rowNumber}</td>`;
+                row.data.forEach((cell, index) => {
+                    // Mask password column (index 2)
+                    if (index === 2) {
+                        bodyHtml += `<td>****</td>`;
+                    } else {
+                        bodyHtml += `<td>${cell || ''}</td>`;
+                    }
+                });
+                
+                if (row.valid) {
+                    bodyHtml += '<td><span class="badge badge-success"><i class="fas fa-check"></i> Valid</span></td>';
+                } else {
+                    const errorList = row.errors.map(e => `<li>${e}</li>`).join('');
+                    bodyHtml += `<td>
+                        <span class="badge badge-danger"><i class="fas fa-times"></i> Invalid</span>
+                        <ul class="error-list">${errorList}</ul>
+                    </td>`;
+                }
+                bodyHtml += '</tr>';
+            });
+            document.getElementById('previewTableBody').innerHTML = bodyHtml;
+            document.getElementById('previewTableContainer').style.display = 'block';
+            
+            if (data.validRows === 0) {
+                document.getElementById('importBtn').disabled = true;
+            } else {
+                document.getElementById('importBtn').disabled = false;
+            }
+        }
+        
+        function backToUpload() {
+            document.getElementById('uploadStep').style.display = 'block';
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('previewBtn').style.display = 'inline-block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+        }
+        
+        function importCsv() {
+            if (!currentFile) {
+                alert('No file selected');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            document.getElementById('importBtn').disabled = true;
+            document.getElementById('importBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            document.getElementById('backBtn').disabled = true;
+            
+            fetch('/admin/import/users', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to import CSV file: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('importBtn').disabled = false;
+                document.getElementById('importBtn').innerHTML = '<i class="fas fa-upload"></i> Import';
+                document.getElementById('backBtn').disabled = false;
+            });
+        }
+        
+        function showResult(data) {
+            document.getElementById('previewStep').style.display = 'none';
+            document.getElementById('resultStep').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('closeResultBtn').style.display = 'inline-block';
+            
+            let resultHtml = '';
+            
+            if (data.successCount > 0) {
+                resultHtml += `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Successfully imported ${data.successCount} user(s)!</strong>
+                    </div>
+                `;
+            }
+            
+            if (data.errors && data.errors.length > 0) {
+                resultHtml += `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>${data.errorCount} row(s) failed to import:</strong>
+                        <ul class="error-list-detail">
+                            ${data.errors.map(e => `<li>Row ${e.rowNumber}, ${e.fieldName}: ${e.errorMessage}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (data.successCount === 0 && (!data.errors || data.errors.length === 0)) {
+                resultHtml = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>No data was imported.</strong> Please check your CSV file.
+                    </div>
+                `;
+            }
+            
+            document.getElementById('importResult').innerHTML = resultHtml;
+        }
+        
+        function closeAndReload() {
+            closeImportModal();
+            window.location.reload();
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('importModal');
+            if (event.target === modal) {
+                closeImportModal();
+            }
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImportModal();
+            }
+        });
+    </script>
+</th:block>
 
 
 
