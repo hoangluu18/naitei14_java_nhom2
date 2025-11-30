@@ -11,14 +11,16 @@ import vn.sun.membermanagementsystem.dto.response.TeamDetailDTO;
 import vn.sun.membermanagementsystem.dto.response.TeamDTO;
 import vn.sun.membermanagementsystem.dto.response.UserSelectionDTO;
 import vn.sun.membermanagementsystem.entities.Team;
+import vn.sun.membermanagementsystem.exception.BadRequestException;
 import vn.sun.membermanagementsystem.entities.User;
 import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
-import vn.sun.membermanagementsystem.mapper.TeamMapper; // Cần inject Mapper
+import vn.sun.membermanagementsystem.mapper.TeamMapper;
 import vn.sun.membermanagementsystem.exception.DuplicateResourceException;
 import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
 import vn.sun.membermanagementsystem.mapper.TeamMapper;
 import vn.sun.membermanagementsystem.repositories.TeamMemberRepository;
 import vn.sun.membermanagementsystem.repositories.TeamRepository;
+import vn.sun.membermanagementsystem.services.TeamLeadershipService;
 import vn.sun.membermanagementsystem.services.TeamService;
 
 import java.util.Collections;
@@ -34,6 +36,7 @@ public class TeamServiceImpl implements TeamService {
 
     private final TeamRepository teamRepository;
     private final TeamMapper teamMapper;
+    private final TeamLeadershipService teamLeadershipService;
     private final TeamMemberRepository teamMemberRepository;
 
 
@@ -42,7 +45,6 @@ public class TeamServiceImpl implements TeamService {
         return teamRepository.findById(id)
                 .map(teamMapper::toDTO);
     }
-
 
     @Override
     public Team getRequiredTeam(Long id) {
@@ -79,6 +81,11 @@ public class TeamServiceImpl implements TeamService {
         Team savedTeam = teamRepository.save(team);
         log.info("Team created successfully with ID: {}", savedTeam.getId());
 
+        if (request.getLeaderId() != null) {
+            log.info("Assigning leader {} to team {}", request.getLeaderId(), savedTeam.getId());
+            teamLeadershipService.assignLeader(savedTeam.getId(), request.getLeaderId());
+        }
+
         return teamMapper.toDTO(savedTeam);
     }
 
@@ -104,6 +111,10 @@ public class TeamServiceImpl implements TeamService {
             team.setDescription(request.getDescription());
         }
 
+        if (request.getLeaderId() != null) {
+            handleLeaderChange(id, request.getLeaderId());
+        }
+
         team.setUpdatedAt(LocalDateTime.now());
 
         Team updatedTeam = teamRepository.save(team);
@@ -111,6 +122,7 @@ public class TeamServiceImpl implements TeamService {
 
         return teamMapper.toDTO(updatedTeam);
     }
+
     @Transactional
     public boolean deleteTeam(Long id) {
         log.info("Soft deleting team with ID: {}", id);
@@ -152,5 +164,20 @@ public class TeamServiceImpl implements TeamService {
 
         List<Team> teams = teamRepository.findAllNotDeleted();
         return teamMapper.toDTOList(teams);
+    }
+
+    private void handleLeaderChange(Long teamId, Long newLeaderId) {
+        log.info("Handling leader change for team {}", teamId);
+
+        try {
+            teamLeadershipService.changeLeader(teamId, newLeaderId);
+        } catch (BadRequestException e) {
+            if (e.getMessage().contains("has no active leader")) {
+                log.info("Team has no active leader, assigning new leader");
+                teamLeadershipService.assignLeader(teamId, newLeaderId);
+            } else {
+                throw e;
+            }
+        }
     }
 }

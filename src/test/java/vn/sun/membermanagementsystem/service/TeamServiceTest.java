@@ -31,6 +31,9 @@ public class TeamServiceTest {
     @Mock
     private TeamMapper teamMapper;
 
+    @Mock
+    private vn.sun.membermanagementsystem.services.TeamLeadershipService teamLeadershipService;
+
     @InjectMocks
     private TeamServiceImpl teamService;
 
@@ -67,6 +70,7 @@ public class TeamServiceTest {
         assertEquals(1L, result.getId());
         assertEquals("Team A", result.getName());
         verify(teamRepository, times(1)).save(any(Team.class));
+        verify(teamLeadershipService, never()).assignLeader(any(), any());
     }
 
     @Test
@@ -117,6 +121,7 @@ public class TeamServiceTest {
         assertEquals("Team B", result.getName());
         assertEquals("Description B", result.getDescription());
         verify(teamRepository, times(1)).save(existingTeam);
+        verify(teamLeadershipService, never()).changeLeader(any(), any());
     }
 
     @Test
@@ -212,5 +217,64 @@ public class TeamServiceTest {
         when(teamRepository.findByIdAndNotDeleted(teamId)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> teamService.getTeamDetail(teamId));
+    }
+
+    @Test
+    void createTeam_WithLeader_Success() {
+        CreateTeamRequest request = new CreateTeamRequest();
+        request.setName("Team A");
+        request.setDescription("Description A");
+        request.setLeaderId(1L);
+
+        Team savedTeam = new Team();
+        savedTeam.setId(1L);
+        savedTeam.setName("Team A");
+        savedTeam.setDescription("Description A");
+        savedTeam.setCreatedAt(LocalDateTime.now());
+        savedTeam.setUpdatedAt(LocalDateTime.now());
+
+        TeamDTO response = new TeamDTO();
+        response.setId(1L);
+        response.setName("Team A");
+        response.setDescription("Description A");
+
+        when(teamRepository.existsByNameAndNotDeleted("Team A")).thenReturn(false);
+        when(teamRepository.save(any(Team.class))).thenReturn(savedTeam);
+        when(teamMapper.toDTO(savedTeam)).thenReturn(response);
+
+        TeamDTO result = teamService.createTeam(request);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(teamRepository, times(1)).save(any(Team.class));
+        verify(teamLeadershipService, times(1)).assignLeader(1L, 1L);
+    }
+
+    @Test
+    void updateTeam_WithLeaderChange_Success() {
+        Long teamId = 1L;
+        UpdateTeamRequest request = new UpdateTeamRequest();
+        request.setName("Team B");
+        request.setLeaderId(2L);
+
+        Team existingTeam = new Team();
+        existingTeam.setId(teamId);
+        existingTeam.setName("Team A");
+        existingTeam.setCreatedAt(LocalDateTime.now().minusDays(1));
+        existingTeam.setUpdatedAt(LocalDateTime.now().minusDays(1));
+
+        TeamDTO response = new TeamDTO();
+        response.setId(teamId);
+        response.setName("Team B");
+
+        when(teamRepository.findByIdAndNotDeleted(teamId)).thenReturn(Optional.of(existingTeam));
+        when(teamRepository.existsByNameAndNotDeletedAndIdNot("Team B", teamId)).thenReturn(false);
+        when(teamRepository.save(existingTeam)).thenReturn(existingTeam);
+        when(teamMapper.toDTO(existingTeam)).thenReturn(response);
+
+        TeamDTO result = teamService.updateTeam(teamId, request);
+
+        assertNotNull(result);
+        verify(teamLeadershipService, times(1)).changeLeader(teamId, 2L);
     }
 }
