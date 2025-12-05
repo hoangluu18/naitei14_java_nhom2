@@ -48,11 +48,6 @@ public class ProjectCsvImportService extends AbstractCsvImportService<Project> {
     }
 
     @Override
-    public String getEntityTypeName() {
-        return "";
-    }
-
-    @Override
     public String generateSampleCsv() {
         return "";
     }

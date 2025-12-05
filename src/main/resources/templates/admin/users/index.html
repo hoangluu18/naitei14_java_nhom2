@@ -12,6 +12,12 @@
       <div class="content-header">
         <h1>User Management</h1>
         <div class="header-actions">
+          <a th:href="@{/admin/users/import}" class="btn btn-secondary">
+            <i class="fas fa-file-import"></i> Import CSV
+          </a>
+          <a th:href="@{/admin/users/export}" class="btn btn-secondary">
+            <i class="fas fa-file-export"></i> Export CSV
+          </a>
           <a th:href="@{/admin/users/create}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Add New User
           </a>

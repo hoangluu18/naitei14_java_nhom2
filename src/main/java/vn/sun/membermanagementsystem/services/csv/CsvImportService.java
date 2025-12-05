@@ -14,7 +14,5 @@ public interface CsvImportService<T> {
 
     String[] getExpectedHeaders();
 
-    String getEntityTypeName();
-
     String generateSampleCsv();
 }

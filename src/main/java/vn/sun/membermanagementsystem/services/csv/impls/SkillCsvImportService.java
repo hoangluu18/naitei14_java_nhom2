@@ -28,11 +28,6 @@ public class SkillCsvImportService extends AbstractCsvImportService<Skill> {
     }
 
     @Override
-    public String getEntityTypeName() {
-        return "";
-    }
-
-    @Override
     public String generateSampleCsv() {
         return "";
     }

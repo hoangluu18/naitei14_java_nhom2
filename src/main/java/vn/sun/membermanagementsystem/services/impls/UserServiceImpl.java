@@ -177,6 +177,7 @@ public class UserServiceImpl implements UserService {
                     .ifPresent(history -> {
                         history.setEndedAt(LocalDateTime.now());
                         userPositionHistoryRepository.save(history);
+                        userPositionHistoryRepository.flush();
                     });
 
             // Tạo position history mới
@@ -197,6 +198,7 @@ public class UserServiceImpl implements UserService {
             // Xóa tất cả skills hiện tại
             List<UserSkill> currentSkills = userSkillRepository.findByUserId(user.getId());
             userSkillRepository.deleteAll(currentSkills);
+            userSkillRepository.flush();
             log.info("Removed {} existing skills for user ID: {}", currentSkills.size(), user.getId());
 
             // Thêm skills mới

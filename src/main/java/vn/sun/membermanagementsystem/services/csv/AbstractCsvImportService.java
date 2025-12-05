@@ -2,6 +2,7 @@ package vn.sun.membermanagementsystem.services.csv;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
+import org.apache.commons.io.input.BOMInputStream;
 import org.springframework.web.multipart.MultipartFile;
 import vn.sun.membermanagementsystem.dto.request.csv.CsvImportResult;
 import vn.sun.membermanagementsystem.dto.request.csv.CsvPreviewResult;
@@ -31,7 +32,7 @@ public abstract class AbstractCsvImportService<T> implements CsvImportService<T>
         }
 
         try (CSVReader reader = new CSVReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8))) {
 
             List<String[]> allRows = reader.readAll();
 
@@ -116,7 +117,7 @@ public abstract class AbstractCsvImportService<T> implements CsvImportService<T>
         }
 
         try (CSVReader reader = new CSVReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8))) {
 
             List<String[]> allRows = reader.readAll();
 
@@ -131,9 +132,9 @@ public abstract class AbstractCsvImportService<T> implements CsvImportService<T>
                 return result;
             }
 
-            result.setTotalRows(allRows.size() - 1); // Exclude header
-
-            // Process each row (skip header)
+            // Collect valid rows (excluding header and empty rows)
+            List<RowData> validRows = new ArrayList<>();
+            
             for (int i = 1; i < allRows.size(); i++) {
                 String[] row = allRows.get(i);
                 int rowNumber = i + 1;
@@ -146,29 +147,67 @@ public abstract class AbstractCsvImportService<T> implements CsvImportService<T>
                 // Validate row data
                 if (!validateRow(row, rowNumber, result)) {
                     result.setErrorCount(result.getErrorCount() + 1);
-                    continue;
-                }
-
-                // Process the row
-                try {
-                    T entity = processRow(row, rowNumber, result);
-                    if (entity != null) {
-                        result.getImportedEntities().add(entity);
-                        result.setSuccessCount(result.getSuccessCount() + 1);
-                    }
-                } catch (Exception e) {
-                    result.addError(rowNumber, "Processing", e.getMessage());
-                    result.setErrorCount(result.getErrorCount() + 1);
+                } else {
+                    validRows.add(new RowData(rowNumber, row));
                 }
             }
+
+            result.setTotalRows(allRows.size() - 1); // Exclude header
+
+            if (result.getErrorCount() > 0) {
+                result.setRolledBack(true);
+                return result;
+            }
+
+            processAllRows(validRows, result);
 
         } catch (IOException e) {
             result.addError(0, "File", "Error reading CSV file: " + e.getMessage());
         } catch (CsvException e) {
             result.addError(0, "File", "Error parsing CSV: " + e.getMessage());
+        } catch (CsvImportException e) {
+            result.setRolledBack(true);
         }
 
         return result;
+    }
+
+    protected void processAllRows(List<RowData> validRows, CsvImportResult<T> result) {
+        for (RowData rowData : validRows) {
+            try {
+                T entity = processRow(rowData.data, rowData.rowNumber, result);
+                if (entity != null) {
+                    result.getImportedEntities().add(entity);
+                    result.setSuccessCount(result.getSuccessCount() + 1);
+                } else {
+                    result.setErrorCount(result.getErrorCount() + 1);
+                    throw new CsvImportException("Import failed at row " + rowData.rowNumber);
+                }
+            } catch (CsvImportException e) {
+                throw e;
+            } catch (Exception e) {
+                result.addError(rowData.rowNumber, "Processing", e.getMessage());
+                result.setErrorCount(result.getErrorCount() + 1);
+                throw new CsvImportException("Import failed at row " + rowData.rowNumber + ": " + e.getMessage());
+            }
+        }
+    }
+
+    protected static class RowData {
+        final int rowNumber;
+        final String[] data;
+
+        RowData(int rowNumber, String[] data) {
+            this.rowNumber = rowNumber;
+            this.data = data;
+        }
+    }
+
+
+    public static class CsvImportException extends RuntimeException {
+        public CsvImportException(String message) {
+            super(message);
+        }
     }
 
     protected abstract T processRow(String[] data, int rowNumber, CsvImportResult<T> result);

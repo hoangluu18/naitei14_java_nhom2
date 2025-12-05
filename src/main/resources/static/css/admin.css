@@ -101,6 +101,7 @@ body {
 .sidebar ul li a {
     display: flex;
     align-items: center;
+    gap: 12px;
     padding: 1rem 1.5rem;
     color: #5a6c7d;
     text-decoration: none;
@@ -109,11 +110,16 @@ body {
     border-left: 3px solid transparent;
 }
 
+.sidebar ul li a i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
 .sidebar ul li a:hover {
     background: #f8f9fa;
     color: #667eea;
     border-left-color: #667eea;
-    padding-left: 2rem;
 }
 
 .sidebar ul li a.active {

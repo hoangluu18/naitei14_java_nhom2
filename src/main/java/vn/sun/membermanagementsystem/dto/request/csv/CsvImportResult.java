@@ -16,6 +16,7 @@ public class CsvImportResult<T> {
     private int totalRows;
     private int successCount;
     private int errorCount;
+    private boolean rolledBack;
     private List<T> importedEntities;
 
     @Builder.Default

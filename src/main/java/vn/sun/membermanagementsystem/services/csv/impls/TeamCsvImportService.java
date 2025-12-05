@@ -27,10 +27,6 @@ public class TeamCsvImportService extends AbstractCsvImportService<Team> {
         return new String[0];
     }
 
-    @Override
-    public String getEntityTypeName() {
-        return "";
-    }
 
     @Override
     public String generateSampleCsv() {

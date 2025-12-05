@@ -38,10 +38,6 @@ public class PositionCsvImportService extends AbstractCsvImportService<Position>
         return new String[0];
     }
 
-    @Override
-    public String getEntityTypeName() {
-        return "";
-    }
 
     @Override
     public String generateSampleCsv() {

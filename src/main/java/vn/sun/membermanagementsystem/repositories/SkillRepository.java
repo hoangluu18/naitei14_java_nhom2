@@ -23,6 +23,9 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
     @Query("SELECT s FROM Skill s WHERE s.id = :id AND s.deletedAt IS NULL")
     Optional<Skill> findByIdAndNotDeleted(@Param("id") Long id);
     
+    @Query("SELECT s FROM Skill s WHERE LOWER(s.name) = LOWER(:name) AND s.deletedAt IS NULL")
+    Optional<Skill> findByNameIgnoreCaseAndNotDeleted(@Param("name") String name);
+    
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
            "FROM Skill s WHERE LOWER(s.name) = LOWER(:name) AND s.deletedAt IS NULL")
     boolean existsByNameIgnoreCaseAndNotDeleted(@Param("name") String name);
