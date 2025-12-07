@@ -1,5 +1,6 @@
 package vn.sun.membermanagementsystem.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -13,9 +14,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.sun.membermanagementsystem.dto.request.csv.CsvImportResult;
 import vn.sun.membermanagementsystem.dto.request.csv.CsvPreviewResult;
 import vn.sun.membermanagementsystem.entities.Skill;
+import vn.sun.membermanagementsystem.services.csv.impls.SkillCsvExportService;
 import vn.sun.membermanagementsystem.services.csv.impls.SkillCsvImportService;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Controller
@@ -24,6 +29,20 @@ import java.nio.charset.StandardCharsets;
 public class SkillCsvController {
 
     private final SkillCsvImportService skillCsvImportService;
+    private final SkillCsvExportService skillCsvExportService;
+
+    @GetMapping("/export")
+    public void exportSkills(HttpServletResponse response) throws IOException {
+        log.info("Exporting skills to CSV");
+
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String filename = "skills_export_" + timestamp + ".csv";
+
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+
+        skillCsvExportService.exportToCsv(response.getOutputStream());
+    }
 
     @GetMapping("/import")
     public String showImportPage(Model model) {
