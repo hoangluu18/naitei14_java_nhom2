@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layouts/admin-layout}"
+>
+<head>
+  <title layout:title-pattern="Import Projects - %s">Import Projects</title>
+  <link th:href="@{/css/import.css}" rel="stylesheet" />
+</head>
+<body>
+<section layout:fragment="content">
+  <div class="content-header">
+    <h1>Import Projects</h1>
+    <div class="header-actions">
+      <a th:href="@{/admin/projects}" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Back to Projects
+      </a>
+    </div>
+  </div>
+
+  <div class="import-container">
+    <div th:if="${successMessage}" class="alert alert-success">
+      <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+    </div>
+    <div th:if="${importErrors}" class="alert alert-danger import-errors">
+      <strong><i class="fas fa-exclamation-triangle"></i> Import Errors:</strong>
+      <ul>
+        <li th:each="error : ${importErrors}" th:text="${error}"></li>
+      </ul>
+    </div>
+
+    <div class="import-card">
+      <h3><i class="fas fa-info-circle"></i> Import Instructions</h3>
+      <div class="instructions">
+        <h4>CSV Format Requirements:</h4>
+        <ul>
+          <li>File must be in CSV format (.csv)</li>
+          <li>Required: <code>Name</code>, <code>Abbreviation</code>, <code>StartDate</code>, <code>TeamName</code></li>
+          <li>Optional: <code>LeaderEmail</code>, <code>MemberEmails</code> (separated by semicolon <code>;</code>)</li>
+          <li>Format Date: <code>yyyy-MM-dd</code></li>
+          <li><code>TeamName</code> and Emails must exist in the system.</li>
+        </ul>
+        <div style="margin-top: 16px">
+          <a th:href="@{/admin/projects/import/template}" class="btn btn-outline">
+            <i class="fas fa-download"></i> Download Sample Template
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="import-card">
+      <h3><i class="fas fa-upload"></i> Upload CSV File</h3>
+      <form id="importForm" th:action="@{/admin/projects/import}" method="post" enctype="multipart/form-data">
+        <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Drag and drop your CSV file here</p>
+          <p class="file-name" id="fileName"></p>
+          <input type="file" id="fileInput" name="file" accept=".csv" style="display: none" onchange="handleFileSelect(this)" />
+        </div>
+
+        <div class="loading" id="loadingIndicator">
+          <i class="fas fa-spinner"></i> <p>Processing file...</p>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" id="previewBtn" class="btn btn-secondary" disabled>
+            <i class="fas fa-eye"></i> Preview
+          </button>
+          <button type="submit" id="importBtn" class="btn btn-primary" disabled>
+            <i class="fas fa-file-import"></i> Import Projects
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="import-card hidden" id="previewSection">
+      <h3><i class="fas fa-table"></i> Preview</h3>
+      <div id="previewError" class="alert alert-danger hidden"></div>
+
+      <div class="summary-box" id="summaryBox">
+        <div class="summary-item total"><div class="number" id="totalCount">0</div><div class="label">Total Rows</div></div>
+        <div class="summary-item valid"><div class="number" id="validCount">0</div><div class="label">Valid</div></div>
+        <div class="summary-item invalid"><div class="number" id="invalidCount">0</div><div class="label">Invalid</div></div>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table class="preview-table" id="previewTable">
+          <thead><tr id="previewHeaders"></tr></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+    const previewBtn = document.getElementById("previewBtn");
+    const importBtn = document.getElementById("importBtn");
+    const previewSection = document.getElementById("previewSection");
+    const loadingIndicator = document.getElementById("loadingIndicator");
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].name.endsWith(".csv")) {
+        fileInput.files = files;
+        handleFileSelect(fileInput);
+      }
+    });
+
+    function handleFileSelect(input) {
+      const file = input.files[0];
+      if (file) {
+        fileName.textContent = file.name;
+        previewBtn.disabled = false;
+        importBtn.disabled = false;
+        previewSection.classList.add("hidden");
+      }
+    }
+
+    previewBtn.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      loadingIndicator.classList.add("show");
+      previewSection.classList.add("hidden");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch(
+                /*[[@{/admin/projects/import/preview}]]*/ "/admin/projects/import/preview",
+                {
+                  method: "POST",
+                  body: formData,
+                }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        displayPreview(result);
+      } catch (error) {
+        console.error("Preview error:", error);
+        previewSection.classList.remove("hidden");
+        const previewError = document.getElementById("previewError");
+        if (previewError) {
+          previewError.textContent = "Error previewing file: " + error.message;
+          previewError.classList.remove("hidden");
+        }
+      } finally {
+        loadingIndicator.classList.remove("show");
+      }
+    });
+
+    function displayPreview(result) {
+      previewSection.classList.remove("hidden");
+
+      const previewError = document.getElementById("previewError");
+      const summaryBox = document.getElementById("summaryBox");
+      const previewHeaders = document.getElementById("previewHeaders");
+      const previewBody = document.getElementById("previewBody");
+
+      if (previewError) previewError.classList.add("hidden");
+      if (previewHeaders) previewHeaders.innerHTML = "";
+      if (previewBody) previewBody.innerHTML = "";
+
+      if (result.fileError) {
+        if (previewError) {
+          previewError.textContent = result.fileError;
+          previewError.classList.remove("hidden");
+        }
+        if (summaryBox) summaryBox.style.display = "none";
+        return;
+      }
+
+      if (summaryBox) summaryBox.style.display = "flex";
+
+      document.getElementById("totalCount").textContent = result.totalRows || 0;
+      document.getElementById("validCount").textContent = result.validRows || 0;
+      document.getElementById("invalidCount").textContent = result.invalidRows || 0;
+
+      if (result.headers && result.headers.length > 0 && previewHeaders) {
+        previewHeaders.innerHTML =
+                "<th>#</th>" +
+                result.headers.map((h) => `<th>${h}</th>`).join("") +
+                "<th>Status</th>";
+      }
+
+      if (result.rows && result.rows.length > 0 && previewBody) {
+        result.rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.className = row.valid ? "valid" : "invalid";
+
+          let html = `<td>${row.rowNumber}</td>`;
+          if (row.data) {
+            html += row.data.map((d) => `<td>${d || ""}</td>`).join("");
+          }
+
+          if (row.valid) {
+            html += '<td><span class="badge badge-success">Valid</span></td>';
+          } else {
+            html += `<td>
+                      <span class="badge badge-danger">Invalid</span>
+                      <ul class="error-list">
+                          ${(row.errors || []).map((e) => `<li>${e}</li>`).join("")}
+                      </ul>
+                  </td>`;
+          }
+          tr.innerHTML = html;
+          previewBody.appendChild(tr);
+        });
+      } else {
+        previewBody.innerHTML = '<tr><td colspan="100" style="text-align: center;">No data rows found</td></tr>';
+      }
+    }
+  </script>
+</section>
+</body>
+</html>

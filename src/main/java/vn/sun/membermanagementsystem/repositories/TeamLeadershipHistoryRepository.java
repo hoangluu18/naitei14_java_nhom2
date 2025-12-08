@@ -12,15 +12,22 @@ import java.util.Optional;
 @Repository
 public interface TeamLeadershipHistoryRepository extends JpaRepository<TeamLeadershipHistory, Long> {
 
-    @Query("SELECT tlh FROM TeamLeadershipHistory tlh " +
-            "JOIN FETCH tlh.leader " +
-            "WHERE tlh.team.id = :teamId " +
-            "AND tlh.endedAt IS NULL")
-    Optional<TeamLeadershipHistory> findActiveLeaderByTeamId(@Param("teamId") Long teamId);
+        @Query("SELECT tlh FROM TeamLeadershipHistory tlh " +
+                        "JOIN FETCH tlh.leader " +
+                        "WHERE tlh.team.id = :teamId " +
+                        "AND tlh.endedAt IS NULL")
+        Optional<TeamLeadershipHistory> findActiveLeaderByTeamId(@Param("teamId") Long teamId);
 
-    @Query("SELECT tlh FROM TeamLeadershipHistory tlh " +
-            "JOIN FETCH tlh.leader " +
-            "WHERE tlh.team.id = :teamId " +
-            "ORDER BY tlh.startedAt DESC")
-    List<TeamLeadershipHistory> findByTeamIdOrderByStartedAtDesc(@Param("teamId") Long teamId);
+        @Query("SELECT tlh FROM TeamLeadershipHistory tlh " +
+                        "JOIN FETCH tlh.leader " +
+                        "WHERE tlh.team.id = :teamId " +
+                        "ORDER BY tlh.startedAt DESC")
+        List<TeamLeadershipHistory> findByTeamIdOrderByStartedAtDesc(@Param("teamId") Long teamId);
+
+        @Query("SELECT tlh FROM TeamLeadershipHistory tlh " +
+                        "WHERE tlh.leader.id = :leaderId " +
+                        "AND tlh.team.id = :teamId " +
+                        "AND tlh.endedAt IS NULL")
+        Optional<TeamLeadershipHistory> findActiveByLeaderIdAndTeamId(@Param("leaderId") Long leaderId,
+                        @Param("teamId") Long teamId);
 }

@@ -24,6 +24,9 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     @Query("SELECT t FROM Team t WHERE t.id = :id AND t.deletedAt IS NULL")
     Optional<Team> findByIdAndNotDeleted(@Param("id") Long id);
 
+    @Query("SELECT t FROM Team t WHERE t.name = :name AND t.deletedAt IS NULL")
+    Optional<Team> findByNameAndNotDeleted(@Param("name") String name);
+
     @Query("SELECT DISTINCT t FROM Team t " +
             "LEFT JOIN FETCH t.leadershipHistory lh " +
             "LEFT JOIN FETCH lh.leader " +

@@ -20,6 +20,12 @@
   <div class="content-header">
     <h1>Project Management</h1>
     <div class="header-actions">
+      <a th:href="@{/admin/projects/import}" class="btn btn-secondary">
+        <i class="fas fa-file-import"></i> Import CSV
+      </a>
+      <a th:href="@{/admin/projects/export}" class="btn btn-secondary">
+        <i class="fas fa-file-export"></i> Export CSV
+      </a>
       <a th:href="@{/admin/projects/create}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add New Project
       </a>

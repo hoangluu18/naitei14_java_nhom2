@@ -23,6 +23,7 @@ import vn.sun.membermanagementsystem.dto.response.TeamStatisticsDTO;
 import vn.sun.membermanagementsystem.exception.BadRequestException;
 import vn.sun.membermanagementsystem.exception.DuplicateResourceException;
 import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
+import vn.sun.membermanagementsystem.services.TeamMemberService;
 import vn.sun.membermanagementsystem.services.TeamService;
 import vn.sun.membermanagementsystem.services.UserService;
 
@@ -33,6 +34,7 @@ public class AdminTeamController {
 
     private final TeamService teamService;
     private final UserService userService;
+    private final TeamMemberService teamMemberService;
 
     @GetMapping
     public String teamList(
@@ -127,6 +129,7 @@ public class AdminTeamController {
             model.addAttribute("statistics", statistics);
             model.addAttribute("users", userService.getAllUsers());
             model.addAttribute("availableUsers", userService.getAllUsers()); // For member management
+            model.addAttribute("allTeams", teamService.getAllTeams()); // For transfer modal
 
             return "admin/teams/edit";
         } catch (ResourceNotFoundException e) {
@@ -278,6 +281,45 @@ public class AdminTeamController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "An error occurred: " + e.getMessage());
             return "error: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/{teamId}/members/{userId}/transfer")
+    @ResponseBody
+    public Map<String, Object> transferMember(@PathVariable Long teamId,
+            @PathVariable Long userId,
+            @RequestBody Map<String, Long> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Long newTeamId = request.get("newTeamId");
+            if (newTeamId == null) {
+                response.put("success", false);
+                response.put("message", "Destination team not specified");
+                return response;
+            }
+
+            if (newTeamId.equals(teamId)) {
+                response.put("success", false);
+                response.put("message", "Cannot transfer to the same team");
+                return response;
+            }
+
+            teamMemberService.transferMember(userId, newTeamId);
+            response.put("success", true);
+            response.put("message", "Member transferred successfully!");
+            return response;
+        } catch (BadRequestException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return response;
+        } catch (ResourceNotFoundException e) {
+            response.put("success", false);
+            response.put("message", "Team or user not found!");
+            return response;
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "An error occurred: " + e.getMessage());
+            return response;
         }
     }
 }

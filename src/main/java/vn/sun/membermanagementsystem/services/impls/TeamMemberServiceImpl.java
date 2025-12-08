@@ -1,22 +1,26 @@
 package vn.sun.membermanagementsystem.services.impls;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.sun.membermanagementsystem.dto.response.TeamMembershipDTO;
 import vn.sun.membermanagementsystem.entities.Team;
+import vn.sun.membermanagementsystem.entities.TeamLeadershipHistory;
 import vn.sun.membermanagementsystem.entities.TeamMember;
 import vn.sun.membermanagementsystem.entities.User;
 import vn.sun.membermanagementsystem.enums.MembershipStatus;
 import vn.sun.membermanagementsystem.exception.BadRequestException;
 import vn.sun.membermanagementsystem.exception.ResourceNotFoundException;
+import vn.sun.membermanagementsystem.repositories.TeamLeadershipHistoryRepository;
 import vn.sun.membermanagementsystem.repositories.TeamMemberRepository;
 import vn.sun.membermanagementsystem.repositories.TeamRepository;
 import vn.sun.membermanagementsystem.repositories.UserRepository;
 import vn.sun.membermanagementsystem.services.TeamMemberService;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -26,6 +30,8 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
+    private final TeamLeadershipHistoryRepository teamLeadershipHistoryRepository;
+    private final EntityManager entityManager;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -92,9 +98,22 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             throw new BadRequestException("User is already in this team.");
         }
 
+        // Check if user is current leader and end leadership before transfer
+        Optional<TeamLeadershipHistory> currentLeadership = teamLeadershipHistoryRepository
+                .findActiveByLeaderIdAndTeamId(userId, currentMembership.getTeam().getId());
+
+        if (currentLeadership.isPresent()) {
+            TeamLeadershipHistory leadership = currentLeadership.get();
+            leadership.setEndedAt(LocalDateTime.now());
+            teamLeadershipHistoryRepository.save(leadership);
+            log.info("Ended leadership for user {} in team {} before transfer",
+                    userId, currentMembership.getTeam().getId());
+        }
+
         currentMembership.setStatus(MembershipStatus.INACTIVE);
         currentMembership.setLeftAt(LocalDateTime.now());
         teamMemberRepository.save(currentMembership);
+        entityManager.flush(); // Force database update before creating new membership
         log.info("Set old membership {} to inactive", currentMembership.getId());
 
         TeamMember newMembership = new TeamMember();
